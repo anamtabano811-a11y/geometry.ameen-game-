@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple GD Clone</title>
+</head>
+<body style="margin:0; overflow:hidden; background:black;">
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Player
+let x = 100;
+let y = 300;
+let size = 30;
+let velocityY = 0;
+let gravity = 0.6;
+let jump = -12;
+
+let ground = canvas.height - 100;
+
+// Obstacles
+let obsX = 600;
+
+// Mouse click jump
+document.addEventListener("mousedown", () => {
+  if (y >= ground - size) {
+    velocityY = jump;
+  }
+});
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Gravity
+  velocityY += gravity;
+  y += velocityY;
+
+  if (y > ground - size) {
+    y = ground - size;
+    velocityY = 0;
+  }
+
+  // Draw player
+  ctx.fillStyle = "cyan";
+  ctx.fillRect(x, y, size, size);
+
+  // Move obstacle
+  obsX -= 5;
+
+  // Draw obstacle
+  ctx.fillStyle = "red";
+  ctx.fillRect(obsX, ground - 30, 30, 30);
+
+  // Collision
+  if (x < obsX + 30 && x + size > obsX && y < ground && y + size > ground - 30) {
+    alert("Game Over!");
+    document.location.reload();
+  }
+
+  // Reset obstacle
+  if (obsX < -50) {
+    obsX = canvas.width;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
