@@ -3,7 +3,7 @@
 <head>
   <title>Simple GD Clone</title>
 </head>
-<body style="margin:0; overflow:hidden; background:url('bg.jpg'); background-size:cover; background-position:center;"></body>
+<body style="margin:0; overflow:hidden; background:url('bg.jpg.png'); background-size:cover; background-position:center;"></body>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -15,12 +15,12 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // Player
-let x = 100;
+let x = 200;
 let y = 300;
-let size = 30;
+let size = 100;
 let velocityY = 0;
 let gravity = 0.6;
-let jump = -12;
+let jump = -20;
 
 let ground = canvas.height - 100;
 
