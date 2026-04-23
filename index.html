@@ -1,76 +1,248 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Simple GD Clone</title>
-</head>
-<body style="margin:0; overflow:hidden; background:url('bg.jpg.png'); background-size:cover; background-position:center;"></body>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometry Ameen Ultimate</title>
 
-<canvas id="gameCanvas"></canvas>
+<style>
+body {
+  margin:0;
+  overflow:hidden;
+  background:url('bg.jpg.png');
+  background-size:cover;
+  font-family:Arial;
+}
+
+/* PLAYER */
+#player {
+  width:60px;
+  height:60px;
+  background:url('monster.png');
+  background-size:cover;
+  position:absolute;
+  bottom:100px;
+  left:50px;
+}
+
+/* ENEMY */
+.enemy {
+  width:50px;
+  height:50px;
+  background:url('enemy.png');
+  background-size:cover;
+  position:absolute;
+  bottom:100px;
+}
+
+/* BULLET */
+.bullet {
+  width:10px;
+  height:10px;
+  background:yellow;
+  position:absolute;
+}
+
+/* COIN */
+.coin {
+  width:30px;
+  height:30px;
+  background:url('coin.png');
+  background-size:cover;
+  position:absolute;
+  bottom:200px;
+}
+
+/* UI */
+#ui {
+  position:absolute;
+  top:10px;
+  left:10px;
+  color:white;
+}
+
+#healthBar {
+  width:200px;
+  height:20px;
+  background:red;
+}
+
+#health {
+  height:100%;
+  background:lime;
+}
+
+/* MOBILE BUTTONS */
+#controls {
+  position:absolute;
+  bottom:10px;
+  width:100%;
+  text-align:center;
+}
+
+button {
+  padding:10px;
+  margin:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+  <div id="level">Level 1</div>
+  <div>Coins: <span id="coins">0</span></div>
+  <div id="healthBar"><div id="health"></div></div>
+</div>
+
+<div id="player"></div>
+
+<div id="controls">
+  <button onclick="jump()">⬆️</button>
+  <button onclick="shoot()">🔥</button>
+</div>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+let player = document.getElementById("player");
+let levelText = document.getElementById("level");
+let coinText = document.getElementById("coins");
+let healthBar = document.getElementById("health");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let level = 1;
+let coins = 0;
+let health = 100;
 
-// Player
-let x = 200;
-let y = 300;
-let size = 100;
-let velocityY = 0;
+let enemies = [];
+let bullets = [];
+let coinItems = [];
+
 let gravity = 0.6;
-let jump = -20;
+let velocity = 0;
+let jumping = false;
 
-let ground = canvas.height - 100;
+function createLevel(){
+  enemies.forEach(e=>e.remove());
+  coinItems.forEach(c=>c.remove());
+  enemies = [];
+  coinItems = [];
 
-// Obstacles
-let obsX = 600;
+  let count = level + 2;
 
-// Mouse click jump
-document.addEventListener("mousedown", () => {
-  if (y >= ground - size) {
-    velocityY = jump;
+  for(let i=0;i<count;i++){
+    let enemy = document.createElement("div");
+    enemy.className = "enemy";
+    enemy.style.left = (300 + i*150) + "px";
+    document.body.appendChild(enemy);
+    enemies.push(enemy);
+
+    let coin = document.createElement("div");
+    coin.className = "coin";
+    coin.style.left = (350 + i*150) + "px";
+    document.body.appendChild(coin);
+    coinItems.push(coin);
   }
+
+  levelText.innerText = (level==15) ? "Ameen The Boss 😈" : "Level " + level;
+}
+
+function jump(){
+  if(!jumping){
+    velocity = -12;
+    jumping = true;
+  }
+}
+
+function shoot(){
+  let b = document.createElement("div");
+  b.className = "bullet";
+  b.style.left = player.offsetLeft + "px";
+  b.style.bottom = player.style.bottom || "100px";
+  document.body.appendChild(b);
+  bullets.push(b);
+}
+
+document.addEventListener("keydown", e=>{
+  if(e.code==="Space") jump();
+  if(e.code==="KeyX") shoot();
 });
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function updateHealth(){
+  healthBar.style.width = health + "%";
+}
 
-  // Gravity
-  velocityY += gravity;
-  y += velocityY;
+function gameLoop(){
+  velocity += gravity;
+  let bottom = parseInt(player.style.bottom)||100;
+  bottom -= velocity;
 
-  if (y > ground - size) {
-    y = ground - size;
-    velocityY = 0;
+  if(bottom<100){
+    bottom=100;
+    jumping=false;
   }
 
-  // Draw player
-  ctx.fillStyle = "cyan";
-  ctx.fillRect(x, y, size, size);
+  player.style.bottom = bottom+"px";
 
-  // Move obstacle
-  obsX -= 5;
+  // ENEMY MOVE + AI
+  enemies.forEach(enemy=>{
+    let left = parseInt(enemy.style.left);
+    enemy.style.left = (left - 5 - level)+"px";
 
-  // Draw obstacle
-  ctx.fillStyle = "red";
-  ctx.fillRect(obsX, ground - 30, 30, 30);
+    let p = player.getBoundingClientRect();
+    let e = enemy.getBoundingClientRect();
 
-  // Collision
-  if (x < obsX + 30 && x + size > obsX && y < ground && y + size > ground - 30) {
-    alert("Game Over!");
-    document.location.reload();
-  }
+    if(p.left < e.right && p.right > e.left){
+      health -= 0.5;
+      updateHealth();
+      if(health<=0){
+        alert("Game Over 💀");
+        location.reload();
+      }
+    }
+  });
 
-  // Reset obstacle
-  if (obsX < -50) {
-    obsX = canvas.width;
+  // BULLETS
+  bullets.forEach((b,i)=>{
+    let left = parseInt(b.style.left);
+    b.style.left = (left + 10)+"px";
+
+    let bRect = b.getBoundingClientRect();
+
+    enemies.forEach((enemy,ei)=>{
+      let eRect = enemy.getBoundingClientRect();
+      if(bRect.left < eRect.right && bRect.right > eRect.left){
+        enemy.remove();
+        enemies.splice(ei,1);
+        b.remove();
+      }
+    });
+  });
+
+  // COINS
+  coinItems.forEach((coin,i)=>{
+    let p = player.getBoundingClientRect();
+    let c = coin.getBoundingClientRect();
+
+    if(p.left < c.right && p.right > c.left){
+      coin.remove();
+      coinItems.splice(i,1);
+      coins++;
+      coinText.innerText = coins;
+    }
+  });
+
+  // NEXT LEVEL
+  if(enemies.length === 0){
+    level++;
+    if(level>15){
+      alert("🔥 YOU BEAT AMEEN THE BOSS 🔥");
+      location.reload();
+    }
+    createLevel();
   }
 
   requestAnimationFrame(gameLoop);
 }
 
+createLevel();
 gameLoop();
 </script>
 
