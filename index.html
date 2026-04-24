@@ -2,24 +2,43 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GD Ultra</title>
+<title>GD Mobile</title>
 
 <style>
 body { margin:0; overflow:hidden; background:black; }
 canvas { display:block; }
+
+/* 📱 MOBILE BUTTON */
+#jumpBtn{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    background:#00ffc8;
+    opacity:0.7;
+    border:none;
+    font-size:20px;
+}
 </style>
 </head>
 
 <body>
 
 <canvas id="game"></canvas>
+<button id="jumpBtn">JUMP</button>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
 
 // GAME VARS
 let player = {x:150, y:300, w:40, h:40, vel:0};
@@ -33,13 +52,12 @@ let score = 0;
 // LOOP
 function loop(){
 
-    // background
     ctx.fillStyle = "#000";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     let ground = canvas.height - 100;
 
-    // platform line
+    // platform
     ctx.strokeStyle = "#00ffc8";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -47,7 +65,7 @@ function loop(){
     ctx.lineTo(canvas.width, ground+40);
     ctx.stroke();
 
-    // PLAYER PHYSICS
+    // player physics
     player.vel += gravity;
     player.y += player.vel;
 
@@ -55,17 +73,16 @@ function loop(){
         player.y = ground;
     }
 
-    // SPAWN (beat feel)
+    // spawn
     if(score % 90 === 0){
         obstacles.push({x:canvas.width, y:ground});
     }
 
-    // OBSTACLES
+    // obstacles
     for(let i=0;i<obstacles.length;i++){
         let o = obstacles[i];
         o.x -= speed;
 
-        // neon spike 🔺
         ctx.shadowBlur = 20;
         ctx.shadowColor = "red";
         ctx.fillStyle = "red";
@@ -85,14 +102,12 @@ function loop(){
         }
     }
 
-    // PARTICLE TRAIL 🌈
+    // particles
     particles.push({x:player.x, y:player.y+20});
 
     for(let i=0;i<particles.length;i++){
         let p = particles[i];
         p.x -= speed;
-        p.y += (Math.random()-0.5)*2;
-
         ctx.fillStyle = "#00ffc8";
         ctx.fillRect(p.x, p.y, 4, 4);
     }
@@ -101,7 +116,7 @@ function loop(){
         particles.shift();
     }
 
-    // PLAYER (glow cube)
+    // player
     ctx.shadowBlur = 20;
     ctx.shadowColor = "#00ffc8";
     ctx.fillStyle = "#00ffc8";
@@ -112,13 +127,30 @@ function loop(){
     requestAnimationFrame(loop);
 }
 
-// JUMP
-document.addEventListener("keydown", e=>{
-    if(e.code==="Space" && player.y >= canvas.height-100){
+// 🎮 JUMP FUNCTION
+function jump(){
+    if(player.y >= canvas.height-100){
         player.vel = -15;
+    }
+}
+
+// PC CONTROL
+document.addEventListener("keydown", e=>{
+    if(e.code==="Space"){
+        jump();
     }
 });
 
+// 📱 MOBILE TOUCH CONTROL
+canvas.addEventListener("touchstart", ()=>{
+    jump();
+});
+
+// 📱 BUTTON CONTROL
+document.getElementById("jumpBtn").addEventListener("touchstart", jump);
+document.getElementById("jumpBtn").addEventListener("click", jump);
+
+// START
 loop();
 </script>
 
